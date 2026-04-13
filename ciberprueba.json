@@ -52,7 +52,12 @@
                 "parameters": {
                     "url": "=https://internetdb.shodan.io/{{ $json.target_ip }}",
                     "options": {
-                        "timeout": 10000
+                        "timeout": 10000,
+                        "response": {
+                            "response": {
+                                "neverError": true
+                            }
+                        }
                     }
                 },
                 "id": "a1b2c3d4-0003-4000-a000-000000000003",
@@ -60,31 +65,20 @@
                 "type": "n8n-nodes-base.httpRequest",
                 "typeVersion": 4.2,
                 "position": [
-                    500,
-                    160
-                ]
-            },
-            {
-                "parameters": {
-                    "url": "=https://dns.google/resolve?name={{ $json.target_domain }}&type=A",
-                    "options": {
-                        "timeout": 10000
-                    }
-                },
-                "id": "a1b2c3d4-0004-4000-a000-000000000004",
-                "name": "DNS Google Lookup",
-                "type": "n8n-nodes-base.httpRequest",
-                "typeVersion": 4.2,
-                "position": [
-                    500,
-                    440
+                    460,
+                    300
                 ]
             },
             {
                 "parameters": {
                     "url": "=https://crt.sh/?q={{ $('Definir Objetivos').item.json.target_domain }}&output=json",
                     "options": {
-                        "timeout": 15000
+                        "timeout": 15000,
+                        "response": {
+                            "response": {
+                                "neverError": true
+                            }
+                        }
                     }
                 },
                 "id": "a1b2c3d4-0005-4000-a000-000000000005",
@@ -92,20 +86,41 @@
                 "type": "n8n-nodes-base.httpRequest",
                 "typeVersion": 4.2,
                 "position": [
-                    500,
+                    700,
                     300
                 ]
             },
             {
                 "parameters": {
-                    "jsCode": "// Recoger resultados de los 3 nodos anteriores\nconst shodan = $('Shodan InternetDB').first().json;\nconst dns = $('DNS Google Lookup').first().json;\nconst crtRaw = $('Certificados crt.sh').first().json;\n\n// Procesar Shodan\nconst shodanInfo = {\n  ip: shodan.ip || 'N/A',\n  puertos_abiertos: shodan.ports || [],\n  hostnames: shodan.hostnames || [],\n  vulns_conocidas: shodan.vulns || [],\n  cpes: shodan.cpes || [],\n  tags: shodan.tags || []\n};\n\n// Procesar DNS\nconst dnsRecords = (dns.Answer || []).map(r => r.data);\n\n// Procesar certificados (limitar a 10 m\u00e1s recientes)\nlet certs = [];\nif (Array.isArray(crtRaw)) {\n  certs = crtRaw;\n} else if (crtRaw && typeof crtRaw === 'object' && !crtRaw.error) {\n  certs = [crtRaw];\n}\nconst certsUnicos = [...new Set(certs.map(c => c.common_name || c.name_value || 'desconocido'))].slice(0, 15);\n\n// Generar informe\nconst ahora = new Date().toISOString();\nconst target_ip = $('Definir Objetivos').first().json.target_ip;\nconst target_domain = $('Definir Objetivos').first().json.target_domain;\n\nlet riesgo = 'BAJO';\nif (shodanInfo.vulns_conocidas.length > 5) riesgo = 'ALTO';\nelse if (shodanInfo.vulns_conocidas.length > 0) riesgo = 'MEDIO';\nif (shodanInfo.puertos_abiertos.length > 10) riesgo = 'ALTO';\n\nconst informe = `\n========================================\n  INFORME CIBERPRUEBA - OSINT Pasivo\n  Fecha: ${ahora}\n========================================\n\nOBJETIVO:\n  IP: ${target_ip}\n  Dominio: ${target_domain}\n\nNIVEL DE RIESGO ESTIMADO: ${riesgo}\n\n--- SHODAN INTERNETDB ---\n  Puertos abiertos (${shodanInfo.puertos_abiertos.length}): ${shodanInfo.puertos_abiertos.join(', ') || 'Ninguno detectado'}\n  Hostnames: ${shodanInfo.hostnames.join(', ') || 'Ninguno'}\n  Vulnerabilidades (${shodanInfo.vulns_conocidas.length}): ${shodanInfo.vulns_conocidas.join(', ') || 'Ninguna conocida'}\n  CPEs: ${shodanInfo.cpes.join(', ') || 'Ninguno'}\n  Tags: ${shodanInfo.tags.join(', ') || 'Ninguno'}\n\n--- DNS (Google DNS-over-HTTPS) ---\n  Registros A: ${dnsRecords.join(', ') || 'Sin registros'}\n\n--- CERTIFICADOS (crt.sh) ---\n  Subdominios/CNs encontrados (${certsUnicos.length}):\n  ${certsUnicos.map(c => '  - ' + c).join('\\n  ') || '  Ninguno encontrado'}\n\n========================================\n  Fuentes: Shodan InternetDB, Google DNS, crt.sh\n  Todo OSINT pasivo - 100% legal\n========================================\n`;\n\nreturn [{\n  json: {\n    informe: informe,\n    resumen: {\n      ip: target_ip,\n      dominio: target_domain,\n      nivel_riesgo: riesgo,\n      puertos_abiertos: shodanInfo.puertos_abiertos,\n      vulnerabilidades: shodanInfo.vulns_conocidas,\n      subdominios_encontrados: certsUnicos,\n      registros_dns: dnsRecords,\n      timestamp: ahora\n    }\n  }\n}];"
+                    "url": "=https://dns.google/resolve?name={{ $('Definir Objetivos').item.json.target_domain }}&type=A",
+                    "options": {
+                        "timeout": 10000,
+                        "response": {
+                            "response": {
+                                "neverError": true
+                            }
+                        }
+                    }
+                },
+                "id": "a1b2c3d4-0004-4000-a000-000000000004",
+                "name": "DNS Google Lookup",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    940,
+                    300
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "// Recoger resultados de los 3 nodos anteriores\nconst shodan = $('Shodan InternetDB').first().json;\nconst dns = $('DNS Google Lookup').first().json;\nconst crtRaw = $('Certificados crt.sh').first().json;\n\n// Procesar Shodan\nconst shodanInfo = {\n  ip: shodan.ip || 'N/A',\n  puertos_abiertos: shodan.ports || [],\n  hostnames: shodan.hostnames || [],\n  vulns_conocidas: shodan.vulns || [],\n  cpes: shodan.cpes || [],\n  tags: shodan.tags || []\n};\n\n// Procesar DNS\nconst dnsRecords = (dns.Answer || []).map(r => r.data);\n\n// Procesar certificados (limitar a 15)\nlet certs = [];\nif (Array.isArray(crtRaw)) {\n  certs = crtRaw;\n} else if (crtRaw && typeof crtRaw === 'object' && !crtRaw.error) {\n  certs = [crtRaw];\n}\nconst certsUnicos = [...new Set(certs.map(c => c.common_name || c.name_value || 'desconocido'))].slice(0, 15);\n\n// Generar informe\nconst ahora = new Date().toISOString();\nconst target_ip = $('Definir Objetivos').first().json.target_ip;\nconst target_domain = $('Definir Objetivos').first().json.target_domain;\n\nlet riesgo = 'BAJO';\nif (shodanInfo.vulns_conocidas.length > 5) riesgo = 'ALTO';\nelse if (shodanInfo.vulns_conocidas.length > 0) riesgo = 'MEDIO';\nif (shodanInfo.puertos_abiertos.length > 10) riesgo = 'ALTO';\n\nconst informe = `\n========================================\n  INFORME CIBERPRUEBA - OSINT Pasivo\n  Fecha: ${ahora}\n========================================\n\nOBJETIVO:\n  IP: ${target_ip}\n  Dominio: ${target_domain}\n\nNIVEL DE RIESGO ESTIMADO: ${riesgo}\n\n--- SHODAN INTERNETDB ---\n  Puertos abiertos (${shodanInfo.puertos_abiertos.length}): ${shodanInfo.puertos_abiertos.join(', ') || 'Ninguno detectado'}\n  Hostnames: ${shodanInfo.hostnames.join(', ') || 'Ninguno'}\n  Vulnerabilidades (${shodanInfo.vulns_conocidas.length}): ${shodanInfo.vulns_conocidas.join(', ') || 'Ninguna conocida'}\n  CPEs: ${shodanInfo.cpes.join(', ') || 'Ninguno'}\n  Tags: ${shodanInfo.tags.join(', ') || 'Ninguno'}\n\n--- DNS (Google DNS-over-HTTPS) ---\n  Registros A: ${dnsRecords.join(', ') || 'Sin registros'}\n\n--- CERTIFICADOS (crt.sh) ---\n  Subdominios/CNs encontrados (${certsUnicos.length}):\n  ${certsUnicos.map(c => '  - ' + c).join('\\n  ') || '  Ninguno encontrado'}\n\n========================================\n  Fuentes: Shodan InternetDB, Google DNS, crt.sh\n  Todo OSINT pasivo - 100% legal\n========================================\n`;\n\nreturn [{\n  json: {\n    informe: informe,\n    resumen: {\n      ip: target_ip,\n      dominio: target_domain,\n      nivel_riesgo: riesgo,\n      puertos_abiertos: shodanInfo.puertos_abiertos,\n      vulnerabilidades: shodanInfo.vulns_conocidas,\n      subdominios_encontrados: certsUnicos,\n      registros_dns: dnsRecords,\n      timestamp: ahora\n    }\n  }\n}];"
                 },
                 "id": "a1b2c3d4-0006-4000-a000-000000000006",
                 "name": "Generar Informe OSINT",
                 "type": "n8n-nodes-base.code",
                 "typeVersion": 2,
                 "position": [
-                    800,
+                    1180,
                     300
                 ]
             }
@@ -129,16 +144,6 @@
                             "node": "Shodan InternetDB",
                             "type": "main",
                             "index": 0
-                        },
-                        {
-                            "node": "Certificados crt.sh",
-                            "type": "main",
-                            "index": 0
-                        },
-                        {
-                            "node": "DNS Google Lookup",
-                            "type": "main",
-                            "index": 0
                         }
                     ]
                 ]
@@ -147,7 +152,7 @@
                 "main": [
                     [
                         {
-                            "node": "Generar Informe OSINT",
+                            "node": "Certificados crt.sh",
                             "type": "main",
                             "index": 0
                         }
@@ -158,7 +163,7 @@
                 "main": [
                     [
                         {
-                            "node": "Generar Informe OSINT",
+                            "node": "DNS Google Lookup",
                             "type": "main",
                             "index": 0
                         }
@@ -183,9 +188,9 @@
         "staticData": null,
         "meta": null,
         "pinData": {},
-        "versionId": "3d7fe01a-c966-433a-8602-1eccfe7b7286",
+        "versionId": "06d4a651-a033-44af-afe7-1066a3b82587",
         "activeVersionId": null,
-        "versionCounter": 1,
+        "versionCounter": 2,
         "triggerCount": 0,
         "tags": [],
         "shared": [
