@@ -1,0 +1,147 @@
+{
+    "updatedAt": "2026-04-14T11:07:40.819Z",
+    "createdAt": "2026-04-14T11:03:32.210Z",
+    "id": "9E2vUu9QwrmQmks9",
+    "name": "delete-report",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "delete-report",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "id": "d5a91c62-0f3a-412a-bb94-850773c8a765",
+            "name": "Webhook Delete",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "0b863f78-fbcd-408c-bece-1a0ea016faa3"
+        },
+        {
+            "parameters": {
+                "jsCode": "const items = $input.all();\nconst body = items[0].json.body || items[0].json;\nconst filename = body.filename;\nif (!filename) return [{ json: { success: false, error: 'Missing filename' } }];\nif (!/^[a-z0-9._-]+\\.html$/i.test(filename)) return [{ json: { success: false, error: 'Invalid filename' } }];\nif (filename.includes('..') || filename.includes('/') || filename.includes('\\\\')) return [{ json: { success: false, error: 'Path traversal not allowed' } }];\nif (filename === 'index.html') return [{ json: { success: false, error: 'Cannot delete index' } }];\nconst fs = require('fs');\nconst fpath = '/home/node/.n8n/informes/' + filename;\nif (!fs.existsSync(fpath)) return [{ json: { success: false, error: 'File not found' } }];\nfs.unlinkSync(fpath);\nreturn [{ json: { success: true, deleted: filename } }];"
+            },
+            "id": "c2c144db-d81d-4c62-999d-f6abe8492d13",
+            "name": "Delete File",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook Delete": {
+            "main": [
+                [
+                    {
+                        "node": "Delete File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {},
+    "staticData": null,
+    "meta": null,
+    "pinData": null,
+    "versionId": "e6120252-43ac-4111-9953-1a590489f459",
+    "activeVersionId": "e6120252-43ac-4111-9953-1a590489f459",
+    "versionCounter": 30,
+    "triggerCount": 1,
+    "shared": [
+        {
+            "updatedAt": "2026-04-14T11:03:32.216Z",
+            "createdAt": "2026-04-14T11:03:32.216Z",
+            "role": "workflow:owner",
+            "workflowId": "9E2vUu9QwrmQmks9",
+            "projectId": "544d5a7d6f0349d5",
+            "project": {
+                "updatedAt": "2026-04-14T11:02:23.390Z",
+                "createdAt": "2026-04-14T11:02:23.390Z",
+                "id": "544d5a7d6f0349d5",
+                "name": "Rolando Landivar <rolandon8n@cristalizaservicios.es>",
+                "type": "personal",
+                "icon": null,
+                "description": null,
+                "creatorId": "1912fa16-47a7-4193-8c9f-91ac08ec0f36"
+            }
+        }
+    ],
+    "tags": [],
+    "activeVersion": {
+        "updatedAt": "2026-04-14T11:07:40.820Z",
+        "createdAt": "2026-04-14T11:07:40.820Z",
+        "versionId": "e6120252-43ac-4111-9953-1a590489f459",
+        "workflowId": "9E2vUu9QwrmQmks9",
+        "nodes": [
+            {
+                "parameters": {
+                    "httpMethod": "POST",
+                    "path": "delete-report",
+                    "responseMode": "lastNode",
+                    "options": {}
+                },
+                "id": "d5a91c62-0f3a-412a-bb94-850773c8a765",
+                "name": "Webhook Delete",
+                "type": "n8n-nodes-base.webhook",
+                "typeVersion": 2,
+                "position": [
+                    250,
+                    300
+                ],
+                "webhookId": "0b863f78-fbcd-408c-bece-1a0ea016faa3"
+            },
+            {
+                "parameters": {
+                    "jsCode": "const items = $input.all();\nconst body = items[0].json.body || items[0].json;\nconst filename = body.filename;\nif (!filename) return [{ json: { success: false, error: 'Missing filename' } }];\nif (!/^[a-z0-9._-]+\\.html$/i.test(filename)) return [{ json: { success: false, error: 'Invalid filename' } }];\nif (filename.includes('..') || filename.includes('/') || filename.includes('\\\\')) return [{ json: { success: false, error: 'Path traversal not allowed' } }];\nif (filename === 'index.html') return [{ json: { success: false, error: 'Cannot delete index' } }];\nconst fs = require('fs');\nconst fpath = '/home/node/.n8n/informes/' + filename;\nif (!fs.existsSync(fpath)) return [{ json: { success: false, error: 'File not found' } }];\nfs.unlinkSync(fpath);\nreturn [{ json: { success: true, deleted: filename } }];"
+                },
+                "id": "c2c144db-d81d-4c62-999d-f6abe8492d13",
+                "name": "Delete File",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    480,
+                    300
+                ]
+            }
+        ],
+        "connections": {
+            "Webhook Delete": {
+                "main": [
+                    [
+                        {
+                            "node": "Delete File",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            }
+        },
+        "authors": "Rolando Landivar",
+        "name": null,
+        "description": null,
+        "autosaved": false,
+        "workflowPublishHistory": [
+            {
+                "createdAt": "2026-04-14T11:07:50.595Z",
+                "id": 8,
+                "workflowId": "9E2vUu9QwrmQmks9",
+                "versionId": "e6120252-43ac-4111-9953-1a590489f459",
+                "event": "activated",
+                "userId": "1912fa16-47a7-4193-8c9f-91ac08ec0f36"
+            }
+        ]
+    }
+}
